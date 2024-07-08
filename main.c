@@ -92,8 +92,8 @@ int main(int argc, char **argv) {
                 fprintf(stderr, "please provide a number to a secret\n");
                 return -1;
             }
-            if (atoi(argv[2]) < 1 || 31 < atoi(argv[2])) {
-                fprintf(stderr, "there are only 31 secrets\n");
+            if (atoi(argv[2]) < 1 || 32 < atoi(argv[2])) {
+                fprintf(stderr, "there are only 32 secrets\n");
                 return -1;
             }
             strcat(bash_cmd, "'/bin/cat', 'cat', '/root/secrets/student");
