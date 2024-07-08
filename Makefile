@@ -1,6 +1,6 @@
 CC := gcc
 SRCS := main.c
-BIN := find_secrets
+BIN := attack
 
 $(BIN):
 	$(CC) $(SRCS) -o $(BIN)
