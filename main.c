@@ -89,6 +89,7 @@ int main(int argc, char **argv) {
     if (argc > 1) {
         if (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-h") == 0) {
             printf("usage: %s [--help|-h][--run-bash|-b][--secret-num|-n num of secret]\n", argv[0]);
+            return 0;
         }
         if (strcmp(argv[1], "--run-bash") == 0 || strcmp(argv[1], "-b") == 0) {
             sprintf(bash_cmd, "%s'/bin/bash', 'bash');\"", bash_cmd);
