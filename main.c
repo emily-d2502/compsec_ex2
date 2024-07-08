@@ -34,7 +34,7 @@ static int child_exec(void *stuff)
     mkdir("/tmp/haxhax/o",  0777);
 
     if (mount("overlay", "/tmp/haxhax/o", "overlay", MS_MGC_VAL,
-                "lowerdir=/bin, upperdir=/tmp/haxhax/u, workdir=/tmp/haxhax/w") != 0) {
+                "lowerdir=/bin,upperdir=/tmp/haxhax/u,workdir=/tmp/haxhax/w") != 0) {
 	    fprintf(stderr, "mount failed...\n");
     }
 
